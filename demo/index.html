@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Line Reader Test</title>
+</head>
+<body>
+  <input type="file" id="file">
+  <button id="read">Read File</button>
+  <button id="stop">Stop Read</button>
+
+  <pre id="output"></pre>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="../LineReader.js"></script>
+  <script>
+
+    $( function () {
+      var lr;
+      $( '#read' ).click( function () {
+        var file = $( '#file' ).get( 0 ).files[ 0 ];
+        var counter = 0;
+        var totalCount = 1;
+        var $output = $( '#output' );
+
+        lr = new LineReader( file );
+
+        lr.on( 'line', function ( line, next ) {
+          if (counter++ < 30) {
+            $output.text( $output.text() + '\n' + totalCount + ' ' + line );
+          } else {
+            counter = 0;
+            $output.text( totalCount + ' ' + line );
+          }
+
+          totalCount++;
+
+          setTimeout( function () {
+            next();
+          }, 100 );
+        });
+
+        lr.read();
+      });
+
+      $('#stop').click( function () {
+        lr.stop();
+      });
+    });
+  </script>
+</body>
+</html>
