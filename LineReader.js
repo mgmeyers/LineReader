@@ -1,5 +1,10 @@
 /**
  * LineReader
+ * https://github.com/mgmeyers/LineReader
+ *
+ * Copyright 2014 Matthew Meyers <hello@matthewmeye.rs>
+ * Released under the MIT license:
+ * http://www.opensource.org/licenses/mit-license.php
  *
  * Reads a file one line at a time. This is especially useful for large files
  * since it only stores small chunks of the file in memory.
