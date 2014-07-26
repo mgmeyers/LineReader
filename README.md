@@ -5,6 +5,9 @@ Reads files line by line in browser using the HTML5 FileReader API.
 ## Usage
 
 ```javascript
+// Get a reference to the file from input[type="file"]
+var file = document.getElementById( 'file' ).files[ 0 ];
+
 // Create a new instance of the LineReader
 var lr = new LineReader( file );
 
