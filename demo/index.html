@@ -6,8 +6,7 @@
 </head>
 <body>
   <input type="file" id="file">
-  <button id="read">Read File</button>
-  <button id="stop">Stop Read</button>
+  <button id="read">Test</button>
 
   <pre id="output"></pre>
 
@@ -15,37 +14,38 @@
   <script src="../LineReader.js"></script>
   <script>
 
-    $( function () {
-      var lr;
-      $( '#read' ).click( function () {
-        var file = $( '#file' ).get( 0 ).files[ 0 ];
-        var counter = 0;
+    $(function () {
+      var lr = new LineReader({
+        chunkSize: 1
+      });
+
+      $('#read').click(function () {
+        var file = $('#file').get(0).files[0];
         var totalCount = 1;
-        var $output = $( '#output' );
+        var $output = $('#output');
 
-        lr = new LineReader( file );
-
-        lr.on( 'line', function ( line, next ) {
-          if (counter++ < 30) {
-            $output.text( $output.text() + '\n' + totalCount + ' ' + line );
-          } else {
-            counter = 0;
-            $output.text( totalCount + ' ' + line );
-          }
+        lr.on('line', function (line, next) {
+          $output.text($output.text() + '\n' + totalCount + ': ' + line);
 
           totalCount++;
 
-          setTimeout( function () {
+          setTimeout(function () {
             next();
-          }, 100 );
+          }, 100);
         });
 
-        lr.read();
+        lr.on('error', function (err, message) {
+          console.log(err);
+          console.log(message);
+        });
+
+        lr.on('end', function () {
+          console.log('Read complete!');
+        });
+
+        lr.read(file);
       });
 
-      $('#stop').click( function () {
-        lr.stop();
-      });
     });
   </script>
 </body>

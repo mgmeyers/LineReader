@@ -9,37 +9,127 @@
  * Reads a file one line at a time. This is especially useful for large files
  * since it only stores small chunks of the file in memory.
  *
- * @param {File} file -- The file object to read
+ * @param {Object} options -- options for the line reader
+ *
+ * Available options:
+ *   chunkSize {Integer} -- how much of the file to read at a time
  */
-var LineReader = function ( file ) {
+var LineReader = function (options) {
+
+  /**
+   * If 'this' isn't an instance of 'LineReader', then the user forgot to use
+   * the 'new' keyword, let's do it for them, otherwise, 'this' will reference
+   * the 'window' object
+   */
   if ( !(this instanceof LineReader) ) {
-    return new LineReader( file );
+    return new LineReader(options);
   }
 
+  /**
+   * We'll use '_internals' to store data we don't want public facing
+   *
+   * We'll also need a reference to 'this', as it will be overridden in the
+   * 'onload' and 'onerror' events
+   */
   var internals = this._internals = {};
   var self = this;
 
-  internals.events = {};
+  /**
+   * Let's create a 'FileReader' instance, we'll only need one per 'LineReader'
+   * instance
+   */
   internals.reader = new FileReader();
+
+  /**
+   * If 'chunkSize' has been set in the options, use that value, otherwise,
+   * default to 1024
+   */
+  internals.chunkSize = ( options && options.chunkSize )
+    ? options.chunkSize
+    : 1024;
+
+  /**
+   * Let's create an object to house user defined event callbacks
+   */
+  internals.events = {};
+
+  /**
+   * 'canRead' will be set to false if the LineReader#abort method is fired
+   */
   internals.canRead = true;
 
-  internals.file = file;
-  internals.fileLength = file.size;
+  /**
+   * FileReader#onload' event. This gets called when any read operations have
+   * completed
+   */
+  internals.reader.onload = function (e) {
 
-  internals.readPos = 0;
-  internals.chunkSize = 1024;
-  internals.chunk = '';
-  internals.lines = [];
-
-  internals.reader.onload = function ( e ) {
+    /**
+     * Store the processed text by tagging it on to any existing processed text
+     */
     internals.chunk += e.target.result;
+
+    /**
+     * If the processed text contains a newline character
+     */
     if ( /\n/.test( internals.chunk ) ) {
+      /**
+       * Split the text into an array of lines
+       */
       internals.lines = internals.chunk.split('\n');
-      if ( self._hasMoreData ) {
+
+      /**
+       * If there is still more data to read, save the last line, as it may be
+       * incomplete
+       */
+      if ( self._hasMoreData() ) {
         internals.chunk = internals.lines.pop();
       }
+
+      /**
+       * Start stepping through each line
+       */
       self._step();
+
+    /**
+     * If the text did not contain a newline character
+     */
+    } else {
+
+      /**
+       * Start another round of the read process if there is still data to read
+       */
+      if ( self._hasMoreData() ) {
+        return self.read();
+      }
+
+      /**
+       * If there is no data left to read, but there is still data stored in
+       * 'chunk', emit it as a line
+       */
+      if ( internals.chunk.length ) {
+        return self._emit('line', [
+          internals.chunk,
+          self._emit.bind(self, 'end')
+        ]);
+      }
+
+      /**
+       * if there is no data stored in 'chunk', emit the end event
+       */
+      self._emit('end');
     }
+  };
+
+  /**
+   * 'FileReader#onerror' event. This gets called any time there is an error
+   * reading a file
+   */
+  internals.reader.onerror = function () {
+    /**
+     * Emit the error event, passing along the error object to the callback
+     */
+    this._emit('error', [ internals.reader.error ]);
   };
 };
 
@@ -52,10 +142,8 @@ var LineReader = function ( file ) {
  * @param {String} eventName -- the name of the event to bind to
  * @param {Function} cb -- the function to execute when the event is triggered
  */
-LineReader.prototype.on = function ( eventName, cb ) {
-  var internals = this._internals;
-
-  internals.events[ eventName ] = cb;
+LineReader.prototype.on = function (eventName, cb) {
+  this._internals.events[ eventName ] = cb;
 };
 
 
@@ -64,22 +152,45 @@ LineReader.prototype.on = function ( eventName, cb ) {
  *
  * Starts the read process
  */
-LineReader.prototype.read = function () {
+LineReader.prototype.read = function (file) {
   var internals = this._internals;
+
+  /**
+   * If file is undefined, then 'read' was most likely called internally
+   * If it wasn't, then 'file.slice' will throw an error
+   */
+  if (typeof file !== 'undefined') {
+    internals.file = file;
+    internals.fileLength = file.size;
+    internals.readPos = 0;
+    internals.chunk = '';
+    internals.lines = [];
+  }
+
+  /**
+   * Extract a section of the file for reading starting at 'readPos' and
+   * ending at 'readPos + chunkSize'
+   */
   var blob = internals.file.slice( internals.readPos, internals.readPos + internals.chunkSize );
 
+  /**
+   * Update our current read position
+   */
   internals.readPos += internals.chunkSize;
 
-  internals.reader.readAsBinaryString( blob );
+  /**
+   * Read the blob as text
+   */
+  internals.reader.readAsText(blob);
 };
 
 
 /**
- * LineReader#stop
+ * LineReader#abort
  *
  * Stops the read process
  */
-LineReader.prototype.stop = function () {
+LineReader.prototype.abort = function () {
   this._internals.canRead = false;
 };
 
@@ -92,12 +203,33 @@ LineReader.prototype.stop = function () {
 LineReader.prototype._step = function () {
   var internals = this._internals;
 
-  if ( internals.lines.length === 0 ) {
-    return this.read();
+  /**
+   * If there are no lines left to emit and there is still data left to read,
+   * start the read process again, otherwise, emit the 'end' event
+   */
+  if (internals.lines.length === 0) {
+    if ( this._hasMoreData() ) {
+      return this.read();
+    }
+    return this._emit('end');
   }
 
-  if ( typeof internals.events.line === 'function' && internals.canRead ) {
-    internals.events.line( internals.lines.shift(), this._step.bind(this) );
+  /**
+   * If the reading process hasn't been aborted, emit the first element of the
+   * line array, and pass in '_step' for the user to call when they are ready
+   * for the next line. We have to bind '_step' to 'this', otherwise it will be
+   * in the wrong scope when the use calls it
+   */
+  if (internals.canRead) {
+    this._emit('line', [
+      internals.lines.shift(),
+      this._step.bind(this)
+    ]);
+  } else {
+    /**
+     * If we can't read, emit the 'end' event
+     */
+    this._emit('end');
   }
 };
 
@@ -109,5 +241,61 @@ LineReader.prototype._step = function () {
  */
 LineReader.prototype._hasMoreData = function () {
   var internals = this._internals;
-  return internals.readPos < internals.fileLength;
+  return internals.readPos <= internals.fileLength;
+};
+
+/**
+ * LineReader#_emit
+ *
+ * Internal: handles event emissions
+ *
+ * @param  {String} event -- The event name to emit
+ * @param  {Array} args -- An array of arguments to send to the event callback
+ */
+LineReader.prototype._emit = function (event, args) {
+  var self = this;
+  var boundEvents = this._internals.events;
+
+  /**
+   * isFunction
+   * @param f -- the thing to check
+   * @return {Boolean} -- true if the thing is a function
+   */
+  var isFunction = function (f) {
+    return typeof f === 'function';
+  };
+
+  /**
+   * Let's store all of our emittable events in an object so we can access them
+   * using the 'event' string
+   */
+  var events = {
+    line: function (args) {
+      /**
+       * if the user has bound the line event
+       */
+      if ( isFunction(boundEvents.line) ) {
+        /**
+         * Use apply to ensure correct scope, and pass in the 'args' array to
+         * be used as arguments for the callback
+         */
+        boundEvents.line.apply(self, args);
+      }
+    },
+    end: function (args) {
+      if ( isFunction(boundEvents.end) ) {
+        boundEvents.end.apply(self, args);
+      }
+    },
+    error: function (args) {
+      if ( isFunction(boundEvents.error) ) {
+        boundEvents.error.apply(self, args);
+      }
+    }
+  };
+
+  /**
+   * Call the requested callback
+   */
+  events[event](args);
 };
