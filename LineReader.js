@@ -151,6 +151,8 @@ LineReader.prototype.on = function (eventName, cb) {
  * LineReader#read
  *
  * Starts the read process
+ *
+ * @param {File} file -- The file reference to process
  */
 LineReader.prototype.read = function (file) {
   var internals = this._internals;
