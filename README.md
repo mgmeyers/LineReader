@@ -9,7 +9,7 @@ Reads files line by line in browser using the HTML5 FileReader API.
 var file = document.getElementById( 'file' ).files[ 0 ];
 
 // Create a new instance of the LineReader
-var lr = new LineReader( file );
+var lr = new LineReader();
 
 // Bind to the line event
 lr.on('line', function ( line, next ) {
@@ -19,8 +19,8 @@ lr.on('line', function ( line, next ) {
 });
 
 // Begin reading the file
-lr.read();
-
-// Stop the read process
-lr.stop();
+lr.read( file );
 ```
+
+## TODO
+* Add better documentation
