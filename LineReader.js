@@ -62,12 +62,13 @@ var LineReader = function (options) {
    * FileReader#onload' event. This gets called when any read operations have
    * completed
    */
-  internals.reader.onload = function (e) {
+  internals.reader.onload = function () {
 
     /**
      * Store the processed text by tagging it on to any existing processed text
+     * 'this' refers to our 'FileReader' instance
      */
-    internals.chunk += e.target.result;
+    internals.chunk += this.result;
 
     /**
      * If the processed text contains a newline character
@@ -128,8 +129,9 @@ var LineReader = function (options) {
   internals.reader.onerror = function () {
     /**
      * Emit the error event, passing along the error object to the callback
+     * 'this' refers to our 'FileReader' instance
      */
-    this._emit('error', [ internals.reader.error ]);
+    this._emit('error', [ this.error ]);
   };
 };
 

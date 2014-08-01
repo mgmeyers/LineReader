@@ -6,7 +6,7 @@
 </head>
 <body>
   <input type="file" id="file">
-  <button id="read">Test</button>
+  <button id="read">Read</button>
 
   <pre id="output"></pre>
 
@@ -34,9 +34,8 @@
           }, 100);
         });
 
-        lr.on('error', function (err, message) {
+        lr.on('error', function (err) {
           console.log(err);
-          console.log(message);
         });
 
         lr.on('end', function () {
