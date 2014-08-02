@@ -131,7 +131,7 @@ var LineReader = function (options) {
      * Emit the error event, passing along the error object to the callback
      * 'this' refers to our 'FileReader' instance
      */
-    this._emit('error', [ this.error ]);
+    self._emit('error', [ this.error ]);
   };
 };
 
@@ -257,49 +257,16 @@ LineReader.prototype._hasMoreData = function () {
  * @param  {Array} args -- An array of arguments to send to the event callback
  */
 LineReader.prototype._emit = function (event, args) {
-  var self = this;
   var boundEvents = this._internals.events;
 
   /**
-   * isFunction
-   * @param f -- the thing to check
-   * @return {Boolean} -- true if the thing is a function
+   * if the user has bound the requested event
    */
-  var isFunction = function (f) {
-    return typeof f === 'function';
-  };
-
-  /**
-   * Let's store all of our emittable events in an object so we can access them
-   * using the 'event' string
-   */
-  var events = {
-    line: function (args) {
-      /**
-       * if the user has bound the line event
-       */
-      if ( isFunction(boundEvents.line) ) {
-        /**
-         * Use apply to ensure correct scope, and pass in the 'args' array to
-         * be used as arguments for the callback
-         */
-        boundEvents.line.apply(self, args);
-      }
-    },
-    end: function (args) {
-      if ( isFunction(boundEvents.end) ) {
-        boundEvents.end.apply(self, args);
-      }
-    },
-    error: function (args) {
-      if ( isFunction(boundEvents.error) ) {
-        boundEvents.error.apply(self, args);
-      }
-    }
-  };
-
-  /**
-   * Call the requested callback
-   */
-  events[event](args);
+  if ( typeof boundEvents[event] === 'function' ) {
+    /**
+     * Use apply to ensure correct scope, and pass in the 'args' array to
+     * be used as arguments for the callback
+     */
+    boundEvents[event].apply(self, args);
+  }
 };
