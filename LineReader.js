@@ -6,8 +6,7 @@
  * Released under the MIT license:
  * http://www.opensource.org/licenses/mit-license.php
  *
- * Reads a file one line at a time. This is especially useful for large files
- * since it only stores small chunks of the file in memory.
+ * Reads a file one line at a time.
  *
  * @param {Object} options -- options for the line reader
  *
@@ -41,7 +40,7 @@ var LineReader = function (options) {
   internals.reader = new FileReader();
 
   /**
-   * If 'chunkSize' has been set in the options, use that value, otherwise,
+   * If 'chunkSize' has been set by the user, use that value, otherwise,
    * default to 1024
    */
   internals.chunkSize = ( options && options.chunkSize )
@@ -160,8 +159,8 @@ LineReader.prototype.read = function (file) {
   var internals = this._internals;
 
   /**
-   * If file is undefined, then 'read' was most likely called internally
-   * If it wasn't, then 'file.slice' will throw an error
+   * If 'file' is defined, then we want to get some information about it and
+   * reset 'readPos', 'chunk', and 'lines'
    */
   if (typeof file !== 'undefined') {
     internals.file = file;
