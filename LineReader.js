@@ -72,11 +72,11 @@ var LineReader = function (options) {
     /**
      * If the processed text contains a newline character
      */
-    if ( /\n/.test( internals.chunk ) ) {
+    if ( /\r|\n/.test( internals.chunk ) ) {
       /**
        * Split the text into an array of lines
        */
-      internals.lines = internals.chunk.split('\n');
+      internals.lines = internals.chunk.match(/[^\r\n]+/g);
 
       /**
        * If there is still more data to read, save the last line, as it may be
