@@ -4,7 +4,7 @@ Reads files line by line using the HTML5 File API.
 
 ## Usage
 
-After the use has selected a file, 
+After the user has selected a file: 
 
 ```javascript
 // Grab a file reference
@@ -25,11 +25,11 @@ lr.read(file);
 ```
 
 
-### LineReader( [options] )
+### `LineReader( [options] )`
 
 The LineReader constructor. You can pass in options here.
 
-#### Options
+#### Available Options
 `chunkSize`: How much data to read at a time. Defaults to `1024`
 
 #### Example
@@ -41,11 +41,9 @@ var myLineReader = new LineReader({
 ```
 
 
-### LineReader#on( eventName, callback )
+### `LineReader.on( eventName, callback )`
 
 Binds events.
-
-### Events
 
 `line` `(line, next)`: Triggered every time a line is read. A `line` string and a `next` function are passed in as arguments. To read the next line, `next` must be called.
 
@@ -54,12 +52,12 @@ Binds events.
 `end`: Triggered when the file has been read completely, or when the `LineReader#abort` method has been called.
 
 
-### LineReader#read( file )
+### `LineReader.read( file )`
 
 Starts the read process on the passed in `file` reference.
 
 
-### LineReader#abort()
+### `LineReader.abort()`
 
 Aborts the read process and prevents lines from being emitted.
 
