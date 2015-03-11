@@ -266,6 +266,6 @@ LineReader.prototype._emit = function (event, args) {
      * Use apply to ensure correct scope, and pass in the 'args' array to
      * be used as arguments for the callback
      */
-    boundEvents[event].apply(self, args);
+    boundEvents[event].apply(this, args);
   }
 };
