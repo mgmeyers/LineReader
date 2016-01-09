@@ -83,7 +83,12 @@ var LineReader = function (options) {
        * incomplete
        */
       if ( self._hasMoreData() ) {
-        internals.chunk = internals.lines.pop();
+    		if (this.result.charAt(this.result.length-1) === '\n') {
+    			internals.chunk = '';
+    		}
+    		else {
+    			internals.chunk = internals.lines.pop();			
+    		}
       }
 
       /**
