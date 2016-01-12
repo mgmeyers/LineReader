@@ -83,7 +83,13 @@ var LineReader = function (options) {
        * incomplete
        */
       if ( self._hasMoreData() ) {
-        internals.chunk = internals.lines.pop();
+        /**
+         * If the loaded chunk ends with a newline character then the last line
+         * is complete and we don't need to store it
+         */
+        internals.chunk = internals.chunk[internals.chunk.length - 1] === '\n' ?
+          '' :
+          internals.lines.pop();
       }
 
       /**
