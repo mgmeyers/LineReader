@@ -111,7 +111,7 @@ var LineReader = function(options) {
        */
       if (internals.chunk.length) {
         return self._emit('line', [
-          internals.chunk,
+          decodeURIComponent(escape(internals.chunk)),
           self._emit.bind(self, 'end'),
         ])
       }
